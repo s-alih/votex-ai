@@ -1,0 +1,50 @@
+GET http://localhost:3001/api/dao/0x3BA8aE675ab5c19579dc7144635e39c5418252EB
+
+
+
+###
+POST http://localhost:3001/api/dao
+Content-Type: application/json
+
+{
+  "name": "WaveForceDAO",
+  "tokenAddress": "0xd18335B9e5D354354Fab33b8377E464d60CdF74e",
+  "tokenSymbol": "WAVE",
+  "governanceContractAddress": "0x3BA8aE675ab5c19579dc7144635e39c5418252EB",
+  "description": "WaveForceDAO 🌊⚡ is a decentralized autonomous organization powered by the Wave Token on the Sonic Blockchain. It enables community-driven governance, allowing members to vote on proposals, fund initiatives, and shape the future of the ecosystem. With a focus on"
+}
+
+###
+POST http://localhost:3001/api/users
+Content-Type: application/json
+
+{
+  "walletAddress": "0x18241781b17b878cFC16B109035904C8E5073e73"
+}
+
+###
+GET http://localhost:3001/api/users/wallet/0x18241781b17b878cFC16B109035904C8E5073e73
+
+
+// Create a new agent
+
+###
+POST http://localhost:3001/api/agents
+Content-Type: application/json
+
+{
+  "userId": "0x18241781b17b878cFC16B109035904C8E5073e73",
+  "daoId": "lLptmzuxzVPPu525Kix5",
+  "isAutoVoteEnabled": true,
+  "governanceStrategy": "Decentralization-Focused",
+  "riskProfile": 90,
+  "voteAlignment": "Align with top governance influencers"
+}
+
+
+###
+GET http://localhost:3001/api/agents/user/0x18241781b17b878cFC16B109035904C8E5073e73
+
+
+
+

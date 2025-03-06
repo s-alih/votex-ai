@@ -1,0 +1,72 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 222 14% 7%;
+    --foreground: 210 40% 98%;
+    
+    --card: 222 14% 10%;
+    --card-foreground: 210 40% 98%;
+    
+    --popover: 222 14% 10%;
+    --popover-foreground: 210 40% 98%;
+    
+    --primary: 228 100% 38%;    /* Sonic Blue: #0038C0 */
+    --primary-foreground: 210 40% 98%;
+    
+    --secondary: 217 100% 47%;  /* Sonic Light Blue: #0068F0 */
+    --secondary-foreground: 210 40% 98%;
+    
+    --muted: 223 14% 15%;
+    --muted-foreground: 215 20.2% 65.1%;
+    
+    --accent: 240 100% 25%;     /* Sonic Dark Blue: #000080 */
+    --accent-foreground: 210 40% 98%;
+    
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    
+    --border: 216 34% 17%;
+    --input: 216 34% 17%;
+    --ring: 228 100% 38%;
+    
+    --radius: 0.75rem;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    background-image: 
+      radial-gradient(circle at 50% 0%, rgba(0, 56, 192, 0.15), transparent 50%),
+      radial-gradient(circle at 0% 50%, rgba(0, 104, 240, 0.1), transparent 50%),
+      radial-gradient(circle at 100% 50%, rgba(0, 0, 128, 0.1), transparent 50%);
+  }
+}
+
+@layer components {
+  .glassmorphic {
+    @apply backdrop-blur-xl bg-black/20 border border-white/10 shadow-[0_8px_32px_0_rgba(0,0,0,0.36)];
+  }
+  
+  .neon-glow-primary {
+    @apply shadow-[0_0_15px_rgba(0,56,192,0.5)];
+  }
+  
+  .neon-glow-secondary {
+    @apply shadow-[0_0_15px_rgba(0,104,240,0.5)];
+  }
+  
+  .neon-glow-accent {
+    @apply shadow-[0_0_15px_rgba(0,0,128,0.5)];
+  }
+  
+  .card-hover {
+    @apply transition-all duration-300 hover:scale-[1.02] hover:neon-glow-primary;
+  }
+}
