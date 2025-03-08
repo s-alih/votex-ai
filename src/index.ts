@@ -4,7 +4,7 @@ import userRoutes from "./routes/user.routes";
 import voteRoutes from "./routes/vote.routes";
 import agentRoutes from "./routes/agent.routes";
 import daoRoutes from "./routes/daoRoutes";
-import { initializeEventListeners } from "./services/eventListener";
+import { initializeProposalCreatedListeners } from "./services/eventListener";
 import { HistoricalDataService } from "./services/historicalDataService";
 import * as dotenv from "dotenv";
 
@@ -25,12 +25,12 @@ app.listen(PORT, async () => {
 
   try {
     // // Initialize event listeners
-    // await initializeEventListeners();
+    // await initializeProposalCreatedListeners();
     // console.log("🎧 DAO event listeners initialized");
 
     // Start historical data collection
-    const historicalDataService = new HistoricalDataService();
-    await historicalDataService.startDataCollection();
+    // const historicalDataService = new HistoricalDataService();
+    // await historicalDataService.startDataCollection();
     console.log("📊 Historical data collection service started");
   } catch (error) {
     console.error("❌ Failed to initialize services:", error);

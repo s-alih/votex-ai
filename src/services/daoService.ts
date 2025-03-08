@@ -26,6 +26,7 @@ export const getDAOById = async (id: string): Promise<DAO | null> => {
 
 export const getAllDAOs = async (): Promise<DAO[]> => {
   const daosSnapshot = await db.collection("daos").get();
+  console.log("daosSnapshot", daosSnapshot.docs);
   return daosSnapshot.docs.map((doc) => doc.data() as DAO);
 };
 

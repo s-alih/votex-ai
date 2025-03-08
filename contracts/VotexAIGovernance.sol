@@ -36,13 +36,6 @@ contract VotexAIGovernance is Ownable {
     event ProposalExecuted(uint256 id, bool passed);
     event VoteDelegated(address indexed voter, address indexed delegate);
     event DelegationRevoked(address indexed voter);
-    event AIAgentVoteCast(
-        uint256 proposalId,
-        address indexed agent,
-        address indexed user,
-        bool vote,
-        uint256 weight
-    );
 
     constructor(address _governanceToken) Ownable(msg.sender) {
         require(_governanceToken != address(0), "Invalid token address");
@@ -116,13 +109,7 @@ contract VotexAIGovernance is Ownable {
             proposal.noVotes += votingPower;
         }
 
-        emit AIAgentVoteCast(
-            _proposalId,
-            msg.sender,
-            _user,
-            _vote,
-            votingPower
-        );
+        emit VoteCast(_proposalId, user, _vote, votingPower);
     }
 
     function executeProposal(uint256 _proposalId) external onlyOwner {

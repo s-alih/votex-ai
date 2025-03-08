@@ -1,6 +1,7 @@
 import { ethers } from "ethers";
 import { proposalsRef, agentsRef } from "../config/index";
 import { fetchAgents, callAIForVoting, Proposal } from "./aiService";
+import { getProposal, updateProposal } from "./proposalService";
 import { getAllDAOs } from "./daoService";
 import * as dotenv from "dotenv";
 
@@ -8,12 +9,20 @@ dotenv.config();
 
 const provider = new ethers.JsonRpcProvider(process.env.SONIC_RPC_URL);
 
-// ABI for the ProposalCreated event
+// Add contract ABI and address
 const GOVERNANCE_ABI = [
+  "function delegateVote(address _delegate) external",
+  "function revokeDelegation() external",
+  "function voteDelegation(address) public view returns (address)",
+  "function aiAgentUser(address) public view returns (address)",
   "event ProposalCreated(uint256 id, string description, address proposer)",
+  "event VoteCast(uint256 proposalId, address voter, bool vote, uint256 weight)",
+  "event ProposalExecuted(uint256 id, bool passed)",
+  "event VoteDelegated(address indexed voter, address indexed delegate)",
+  "event DelegationRevoked(address indexed voter)",
 ];
 
-export async function initializeEventListeners() {
+export async function initializeProposalCreatedListeners() {
   try {
     // Fetch all DAOs
     const daos = await getAllDAOs();
@@ -63,6 +72,35 @@ export async function initializeEventListeners() {
     console.log("🚀 Event listeners initialized successfully");
   } catch (error) {
     console.error("❌ Error initializing event listeners:", error);
+    throw error;
+  }
+}
+
+// need to add a listener for the VoteCast event and update the proposal with the vote
+
+export async function initializeVoteCastListeners() {
+  try {
+    // Fetch all DAOs
+    const daos = await getAllDAOs();
+    console.log(`📡 Setting up listeners for ${daos.length} DAOs...`);
+
+    // Set up listeners for each DAO
+    daos.forEach((dao) => {
+      const contract = new ethers.Contract(
+        dao.governanceContractAddress,
+        GOVERNANCE_ABI,
+        provider
+      );
+
+      contract.on("VoteCast", async (proposalId, voter, vote, weight) => {
+        // update the proposal with the vote
+        const proposal = await getProposal(proposalId);
+        proposal.votesFor += weight;
+        await updateProposal(proposal);
+      });
+    });
+  } catch (error) {
+    console.error("❌ Error initializing vote cast listeners:", error);
     throw error;
   }
 }

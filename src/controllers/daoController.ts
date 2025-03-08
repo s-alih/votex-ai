@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { createDAO, getDAOById } from "../services/daoService";
+import { createDAO, getAllDAOs, getDAOById } from "../services/daoService";
 
 export const createDAOHandler = (req: Request, res: Response) => {
   try {
@@ -43,6 +43,18 @@ export const getDAOByIdHandler = (req: Request, res: Response) => {
     res.status(200).json(dao);
   } catch (error) {
     console.error("Error fetching DAO:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+export const getAllDAOsHandler = async (req: Request, res: Response) => {
+  try {
+    console.log("Getting all DAOs...");
+    const daos = await getAllDAOs();
+    console.log("Found DAOs:", daos.length);
+    res.status(200).json({ daos });
+  } catch (error) {
+    console.error("Error fetching DAOs:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 };

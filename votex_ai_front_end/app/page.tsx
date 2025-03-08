@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -12,17 +12,100 @@ import {
   Plus,
   UserPlus,
 } from "lucide-react";
+import { useAccount, useConnect, useDisconnect } from "wagmi";
+import { injected } from "wagmi/connectors";
 import DashboardView from "@/components/dashboard/DashboardView";
 import AIConfigView from "@/components/dashboard/AIConfigView";
 import WalletView from "@/components/dashboard/WalletView";
 import ProposalView from "@/components/dashboard/ProposalView";
 
-export default function Home() {
-  const [walletConnected, setWalletConnected] = useState(false);
-  const [agentCreated, setAgentCreated] = useState(false);
-  const [selectedProposal, setSelectedProposal] = useState(null);
+interface User {
+  walletAddress: string;
+  agentWallet: string;
+  agentWalletPrivateKey: string;
+  daoMemberships: any[];
+  createdAt: any;
+  updatedAt: any;
+}
 
-  if (!walletConnected) {
+export default function Home() {
+  const { address, isConnected } = useAccount();
+  const { connect } = useConnect();
+  const { disconnect } = useDisconnect();
+  const [user, setUser] = useState<User | null>(null);
+  const [selectedProposal, setSelectedProposal] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    const checkUser = async () => {
+      if (address) {
+        try {
+          const response = await fetch(
+            `${process.env.NEXT_PUBLIC_API_URL}/api/users/wallet/${address}`
+          );
+          console.log("response", response);
+          if (response.ok) {
+            const existingUser = await response.json();
+            setUser(existingUser);
+          }
+        } catch (error) {
+          console.error("Error checking user:", error);
+        }
+      }
+    };
+
+    checkUser();
+  }, [address]);
+
+  const handleConnect = async () => {
+    try {
+      await connect({ connector: injected() });
+    } catch (error) {
+      console.error("Failed to connect:", error);
+    }
+  };
+
+  const handleCreateUserAndAgent = async () => {
+    if (!address) return;
+
+    setIsLoading(true);
+    try {
+      // First create user if doesn't exist
+      const createUserResponse = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/users`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ walletAddress: address }),
+        }
+      );
+
+      if (createUserResponse.ok) {
+        const newUser = await createUserResponse.json();
+
+        // Then create agent wallet
+        const createAgentResponse = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/users/${address}/create-agent`,
+          {
+            method: "POST",
+          }
+        );
+
+        if (createAgentResponse.ok) {
+          const updatedUser = await createAgentResponse.json();
+          setUser(updatedUser);
+        }
+      }
+    } catch (error) {
+      console.error("Error creating user and agent:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  if (!isConnected) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="sonic-container">
@@ -36,10 +119,7 @@ export default function Home() {
                   Connect your wallet to start participating in DAO governance
                 </p>
               </div>
-              <Button
-                className="sonic-button w-full"
-                onClick={() => setWalletConnected(true)}
-              >
+              <Button className="sonic-button w-full" onClick={handleConnect}>
                 <Wallet className="mr-2 h-5 w-5" />
                 Connect Wallet
               </Button>
@@ -50,7 +130,7 @@ export default function Home() {
     );
   }
 
-  if (!agentCreated) {
+  if (!user) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="sonic-container">
@@ -61,17 +141,18 @@ export default function Home() {
                 <h2 className="sonic-heading text-2xl">Create Agent Wallet</h2>
                 <p className="sonic-subheading">
                   Create an agent wallet to help manage your DAO governance and
-                  make sure you are funding with $SONIC for paying gas fee while
+                  make sure you are funding with $S for paying gas fee while
                   voting
                 </p>
               </div>
               <div className="space-y-4">
                 <Button
                   className="sonic-button w-full"
-                  onClick={() => setAgentCreated(true)}
+                  onClick={handleCreateUserAndAgent}
+                  disabled={isLoading}
                 >
                   <Plus className="mr-2 h-5 w-5" />
-                  Create AI Agent
+                  {isLoading ? "Creating..." : "Create AI Agent Wallet"}
                 </Button>
               </div>
             </div>
@@ -103,9 +184,9 @@ export default function Home() {
               <Brain className="h-8 w-8 text-primary neon-glow-primary" />
               <h1 className="sonic-heading text-2xl">VotexAI</h1>
             </div>
-            <Button className="sonic-button">
+            <Button className="sonic-button" onClick={() => disconnect()}>
               <Wallet className="mr-2 h-4 w-4" />
-              0x1234...5678
+              {address ? `${address.slice(0, 6)}...${address.slice(-4)}` : ""}
             </Button>
           </div>
         </header>

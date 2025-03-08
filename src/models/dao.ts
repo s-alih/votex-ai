@@ -5,7 +5,6 @@ export interface DAO {
   tokenSymbol: string;
   governanceContractAddress: string;
   description?: string; // Optional
-  tokenBalance?: number;
   createdAt: Date;
   updatedAt: Date;
 }

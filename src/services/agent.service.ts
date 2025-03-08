@@ -35,3 +35,34 @@ export const createAIAgent = async (
   const agentRef = await db.collection("agents").add(newAgent);
   return { ...newAgent };
 };
+
+export const updateAgent = async (
+  agentId: string,
+  agentData: Partial<AIAgent>
+): Promise<AIAgent | null> => {
+  const agentRef = db.collection("agents").doc(agentId);
+  const doc = await agentRef.get();
+  if (!doc.exists) {
+    throw new Error("Agent not found");
+  }
+
+  const currentAgent = doc.data() as AIAgent;
+  const updatedAgent: AIAgent = {
+    ...currentAgent,
+    ...agentData,
+  };
+
+  await agentRef.set(updatedAgent);
+  return updatedAgent;
+};
+
+export const getAgentById = async (
+  agentId: string
+): Promise<AIAgent | null> => {
+  const agentRef = db.collection("agents").doc(agentId);
+  const doc = await agentRef.get();
+  if (!doc.exists) {
+    return null;
+  }
+  return doc.data() as AIAgent;
+};
