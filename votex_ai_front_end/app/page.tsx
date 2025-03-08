@@ -24,71 +24,67 @@ export default function Home() {
 
   if (!walletConnected) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <Card className="p-8 glassmorphic card-hover max-w-lg w-full mx-4">
-          <div className="text-center space-y-6">
-            <Brain className="w-20 h-20 mx-auto text-primary animate-pulse" />
-            <h1 className="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary via-secondary to-accent">
-              VotexAI
-            </h1>
-            <div className="space-y-2">
-              <h2 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-secondary">
-                Connect Your Wallet
-              </h2>
-              <p className="text-muted-foreground">
-                Connect your wallet to start participating in DAO governance
-              </p>
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="sonic-container">
+          <div className="sonic-card max-w-lg w-full mx-4">
+            <div className="text-center space-y-6">
+              <Brain className="w-20 h-20 mx-auto text-primary animate-pulse" />
+              <h1 className="sonic-heading">VotexAI</h1>
+              <div className="space-y-2">
+                <h2 className="sonic-heading text-2xl">Connect Your Wallet</h2>
+                <p className="sonic-subheading">
+                  Connect your wallet to start participating in DAO governance
+                </p>
+              </div>
+              <Button
+                className="sonic-button w-full"
+                onClick={() => setWalletConnected(true)}
+              >
+                <Wallet className="mr-2 h-5 w-5" />
+                Connect Wallet
+              </Button>
             </div>
-            <Button
-              size="lg"
-              className="w-full glassmorphic hover:neon-glow-primary transition-all duration-300"
-              onClick={() => setWalletConnected(true)}
-            >
-              <Wallet className="mr-2 h-5 w-5" />
-              Connect Wallet
-            </Button>
           </div>
-        </Card>
+        </div>
       </div>
     );
   }
 
   if (!agentCreated) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <Card className="p-8 glassmorphic card-hover max-w-lg w-full mx-4">
-          <div className="text-center space-y-6">
-            <UserPlus className="w-20 h-20 mx-auto text-secondary animate-pulse" />
-            <div className="space-y-2">
-              <h2 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-secondary to-accent">
-                Create Agent Wallet
-              </h2>
-              <p className="text-muted-foreground">
-                Create an agent wallet to help manage your DAO governance and
-                make sure you are funding with $SONIC for paying gas fee while
-                voting
-              </p>
-            </div>
-            <div className="space-y-4">
-              <Button
-                size="lg"
-                className="w-full glassmorphic hover:neon-glow-secondary transition-all duration-300"
-                onClick={() => setAgentCreated(true)}
-              >
-                <Plus className="mr-2 h-5 w-5" />
-                Create AI Agent
-              </Button>
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="sonic-container">
+          <div className="sonic-card max-w-lg w-full mx-4">
+            <div className="text-center space-y-6">
+              <UserPlus className="w-20 h-20 mx-auto text-secondary animate-pulse" />
+              <div className="space-y-2">
+                <h2 className="sonic-heading text-2xl">Create Agent Wallet</h2>
+                <p className="sonic-subheading">
+                  Create an agent wallet to help manage your DAO governance and
+                  make sure you are funding with $SONIC for paying gas fee while
+                  voting
+                </p>
+              </div>
+              <div className="space-y-4">
+                <Button
+                  className="sonic-button w-full"
+                  onClick={() => setAgentCreated(true)}
+                >
+                  <Plus className="mr-2 h-5 w-5" />
+                  Create AI Agent
+                </Button>
+              </div>
             </div>
           </div>
-        </Card>
+        </div>
       </div>
     );
   }
 
   if (selectedProposal) {
     return (
-      <div className="min-h-screen bg-background">
-        <div className="container mx-auto py-8">
+      <div className="min-h-screen">
+        <div className="sonic-container py-8">
           <ProposalView
             proposal={selectedProposal}
             onBack={() => setSelectedProposal(null)}
@@ -99,17 +95,15 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto py-8">
+    <div className="min-h-screen">
+      <div className="sonic-container py-8">
         <header className="mb-8">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
               <Brain className="h-8 w-8 text-primary neon-glow-primary" />
-              <h1 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-secondary">
-                VotexAI
-              </h1>
+              <h1 className="sonic-heading text-2xl">VotexAI</h1>
             </div>
-            <Button variant="outline" className="glassmorphic">
+            <Button className="sonic-button">
               <Wallet className="mr-2 h-4 w-4" />
               0x1234...5678
             </Button>
@@ -117,7 +111,7 @@ export default function Home() {
         </header>
 
         <Tabs defaultValue="dashboard" className="space-y-4">
-          <TabsList className="grid grid-cols-3 gap-4 glassmorphic p-1">
+          <TabsList className="sonic-card grid grid-cols-3 gap-4 p-1">
             <TabsTrigger
               value="dashboard"
               className="data-[state=active]:neon-glow-primary data-[state=active]:bg-primary/20"

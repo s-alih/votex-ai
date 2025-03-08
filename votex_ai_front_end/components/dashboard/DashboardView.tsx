@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { Card } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
+import { Card } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
 import {
   Table,
   TableBody,
@@ -9,9 +9,9 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+} from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import {
   Brain,
   CheckCircle,
@@ -23,54 +23,56 @@ import {
   Power,
   Timer,
   ExternalLink,
-} from 'lucide-react';
+} from "lucide-react";
 
 const mockDAOs = [
   {
     id: 1,
-    name: 'Uniswap',
-    logo: 'https://images.unsplash.com/photo-1622630998477-20aa696ecb05?w=128&h=128&fit=crop',
+    name: "Uniswap",
+    logo: "https://images.unsplash.com/photo-1622630998477-20aa696ecb05?w=128&h=128&fit=crop",
     aiAgent: {
       deployed: true,
       autoVoting: true,
-      lastActive: '2h ago',
+      lastActive: "2h ago",
     },
     proposals: [
       {
         id: 1,
-        title: 'UNI-P-V3: Deploy Uniswap v3 on Base',
-        description: 'Proposal to deploy Uniswap v3 on Base network to expand protocol reach',
-        aiRecommendation: 'approve',
+        title: "UNI-P-V3: Deploy Uniswap v3 on Base",
+        description:
+          "Proposal to deploy Uniswap v3 on Base network to expand protocol reach",
+        aiRecommendation: "approve",
         confidence: 92,
-        timeRemaining: '2d 4h',
+        timeRemaining: "2d 4h",
         votes: { for: 65, against: 35 },
-        votingEnds: '2024-03-25T15:00:00Z',
+        votingEnds: "2024-03-25T15:00:00Z",
       },
     ],
-    votingPower: '234.5K UNI',
+    votingPower: "234.5K UNI",
   },
   {
     id: 2,
-    name: 'Aave',
-    logo: 'https://images.unsplash.com/photo-1622630998477-20aa696ecb05?w=128&h=128&fit=crop',
+    name: "Aave",
+    logo: "https://images.unsplash.com/photo-1622630998477-20aa696ecb05?w=128&h=128&fit=crop",
     aiAgent: {
       deployed: true,
       autoVoting: false,
-      lastActive: '1d ago',
+      lastActive: "1d ago",
     },
     proposals: [
       {
         id: 2,
-        title: 'AIP-V3: Upgrade Interest Rate Model',
-        description: 'Proposal to update the interest rate model for improved capital efficiency',
-        aiRecommendation: 'reject',
+        title: "AIP-V3: Upgrade Interest Rate Model",
+        description:
+          "Proposal to update the interest rate model for improved capital efficiency",
+        aiRecommendation: "reject",
         confidence: 87,
-        timeRemaining: '1d 12h',
+        timeRemaining: "1d 12h",
         votes: { for: 45, against: 55 },
-        votingEnds: '2024-03-24T10:00:00Z',
+        votingEnds: "2024-03-24T10:00:00Z",
       },
     ],
-    votingPower: '1.2K AAVE',
+    votingPower: "1.2K AAVE",
   },
 ];
 
@@ -78,7 +80,9 @@ interface DashboardViewProps {
   onSelectProposal: (proposal: any) => void;
 }
 
-export default function DashboardView({ onSelectProposal }: DashboardViewProps) {
+export default function DashboardView({
+  onSelectProposal,
+}: DashboardViewProps) {
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 gap-4">
@@ -99,10 +103,7 @@ export default function DashboardView({ onSelectProposal }: DashboardViewProps) 
                 </div>
               </div>
               {dao.aiAgent.deployed && (
-                <Badge
-                  variant="default"
-                  className="bg-primary/20"
-                >
+                <Badge variant="default" className="bg-primary/20">
                   <Brain className="mr-1 h-3 w-3" />
                   AI Active
                 </Badge>
@@ -131,18 +132,35 @@ export default function DashboardView({ onSelectProposal }: DashboardViewProps) 
                     <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center space-x-2">
                         <Brain className="h-5 w-5 text-primary" />
-                        <span className="font-semibold">AI Vote Prediction</span>
+                        <span className="font-semibold">
+                          AI Vote Prediction
+                        </span>
                       </div>
                       <Badge
-                        variant={proposal.aiRecommendation === 'approve' ? 'default' : 'destructive'}
-                        className={`${proposal.aiRecommendation === 'approve' ? 'bg-primary/20' : 'bg-destructive/20'} text-lg`}
+                        variant={
+                          proposal.aiRecommendation === "approve"
+                            ? "default"
+                            : "destructive"
+                        }
+                        className={`${
+                          proposal.aiRecommendation === "approve"
+                            ? "bg-primary/20"
+                            : "bg-destructive/20"
+                        } text-lg`}
                       >
-                        {proposal.aiRecommendation === 'approve' ? 'Will Vote For' : 'Will Vote Against'}
+                        {proposal.aiRecommendation === "approve"
+                          ? "Will Vote For"
+                          : "Will Vote Against"}
                       </Badge>
                     </div>
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">Confidence: {proposal.confidence}%</span>
-                      <span className="text-muted-foreground">Auto-voting {dao.aiAgent.autoVoting ? 'enabled' : 'disabled'}</span>
+                      <span className="text-muted-foreground">
+                        Confidence: {proposal.confidence}%
+                      </span>
+                      <span className="text-muted-foreground">
+                        Auto-voting{" "}
+                        {dao.aiAgent.autoVoting ? "enabled" : "disabled"}
+                      </span>
                     </div>
                   </div>
 
