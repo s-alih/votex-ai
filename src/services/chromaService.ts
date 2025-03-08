@@ -44,10 +44,27 @@ export class ChromaService {
     const embedding = await this.generateEmbedding(
       `${vote.voteType} ${vote.voteReason} ${vote.voteExplanation}`
     );
+    const metadata = {
+      voterUserId: userId,
+      id: vote.id,
+      proposalId: vote.proposalId,
+      userId: vote.userId,
+      voteType: vote.voteType || "",
+      isVoted: vote.isVoted,
+      suggestedVote: vote.suggestedVote || "",
+      voteReason: vote.voteReason || "",
+      voteExplanation: vote.voteExplanation || "",
+      aiAnalysis: vote.aiAnalysis || "",
+      timestamp: vote.timestamp,
+      daoData: JSON.stringify(vote.dao),
+      userData: JSON.stringify(vote.user),
+      agentData: JSON.stringify(vote.agent),
+    };
+
     await this.userVotesCollection.add({
       ids: [`${userId}_${vote.id}`],
       embeddings: [embedding],
-      metadatas: [{ voterUserId: userId, ...vote }],
+      metadatas: [metadata],
       documents: [JSON.stringify(vote)],
     });
   }
@@ -68,7 +85,7 @@ export class ChromaService {
     const embedding = await this.generateEmbedding(query);
     return await this.userVotesCollection.query({
       queryEmbeddings: [embedding],
-      whereDocument: { userId },
+      where: { voterUserId: userId },
       nResults: limit,
     });
   }

@@ -6,7 +6,7 @@ import * as dotenv from "dotenv";
 
 dotenv.config();
 
-const provider = new ethers.JsonRpcProvider(process.env.ETHEREUM_RPC_URL);
+const provider = new ethers.JsonRpcProvider(process.env.SONIC_RPC_URL);
 
 // ABI for the ProposalCreated event
 const GOVERNANCE_ABI = [

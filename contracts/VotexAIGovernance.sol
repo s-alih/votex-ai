@@ -14,6 +14,7 @@ contract VotexAIGovernance is Ownable {
         bool executed;
         address proposer;
         mapping(address => bool) hasVoted;
+        mapping(address => bool) hasAIVoted; // Track AI votes separately
     }
 
     IERC20 public governanceToken;
@@ -21,6 +22,9 @@ contract VotexAIGovernance is Ownable {
     uint256 public votingPeriod = 3 days; // Voting duration
     mapping(uint256 => Proposal) public proposals;
     mapping(address => address) public voteDelegation; // Delegate voting power
+    mapping(address => address) public aiAgentUser;
+    mapping(address => uint256) public aiAgentVotingPower;
+    mapping(address => address) public userToAIAgent; // Map users to their AI agents
 
     event ProposalCreated(uint256 id, string description, address proposer);
     event VoteCast(
@@ -32,6 +36,13 @@ contract VotexAIGovernance is Ownable {
     event ProposalExecuted(uint256 id, bool passed);
     event VoteDelegated(address indexed voter, address indexed delegate);
     event DelegationRevoked(address indexed voter);
+    event AIAgentVoteCast(
+        uint256 proposalId,
+        address indexed agent,
+        address indexed user,
+        bool vote,
+        uint256 weight
+    );
 
     constructor(address _governanceToken) Ownable(msg.sender) {
         require(_governanceToken != address(0), "Invalid token address");
@@ -52,6 +63,7 @@ contract VotexAIGovernance is Ownable {
         emit ProposalCreated(proposalCount, _description, msg.sender);
     }
 
+    // Regular user voting function
     function vote(uint256 _proposalId, bool _vote) external {
         Proposal storage proposal = proposals[_proposalId];
         require(
@@ -73,6 +85,46 @@ contract VotexAIGovernance is Ownable {
         emit VoteCast(_proposalId, msg.sender, _vote, voterBalance);
     }
 
+    // AI agent voting on behalf of a user
+    function voteAsAIAgent(
+        uint256 _proposalId,
+        bool _vote,
+        address _user
+    ) external {
+        require(
+            userToAIAgent[_user] == msg.sender,
+            "Not authorized AI agent for user"
+        );
+
+        Proposal storage proposal = proposals[_proposalId];
+        require(
+            block.timestamp <= proposal.createdAt + votingPeriod,
+            "Voting period ended"
+        );
+        require(proposal.hasVoted[_user], "User must vote first");
+        require(!proposal.hasAIVoted[_user], "AI already voted for this user");
+
+        // find user address from aiAgentUser mapping
+        address user = aiAgentUser[msg.sender];
+        uint256 votingPower = governanceToken.balanceOf(user);
+        require(votingPower > 0, "No AI voting power");
+
+        proposal.hasAIVoted[_user] = true;
+        if (_vote) {
+            proposal.yesVotes += votingPower;
+        } else {
+            proposal.noVotes += votingPower;
+        }
+
+        emit AIAgentVoteCast(
+            _proposalId,
+            msg.sender,
+            _user,
+            _vote,
+            votingPower
+        );
+    }
+
     function executeProposal(uint256 _proposalId) external onlyOwner {
         Proposal storage proposal = proposals[_proposalId];
         require(
@@ -92,6 +144,7 @@ contract VotexAIGovernance is Ownable {
         require(_delegate != msg.sender, "Cannot delegate to yourself");
 
         voteDelegation[msg.sender] = _delegate;
+        aiAgentUser[_delegate] = msg.sender;
 
         emit VoteDelegated(msg.sender, _delegate);
     }
@@ -100,7 +153,7 @@ contract VotexAIGovernance is Ownable {
         require(voteDelegation[msg.sender] != address(0), "No delegation set");
 
         delete voteDelegation[msg.sender];
-
+        delete aiAgentUser[msg.sender];
         emit DelegationRevoked(msg.sender);
     }
 }

@@ -5,6 +5,7 @@ import voteRoutes from "./routes/vote.routes";
 import agentRoutes from "./routes/agent.routes";
 import daoRoutes from "./routes/daoRoutes";
 import { initializeEventListeners } from "./services/eventListener";
+import { HistoricalDataService } from "./services/historicalDataService";
 import * as dotenv from "dotenv";
 
 dotenv.config();
@@ -23,9 +24,15 @@ app.listen(PORT, async () => {
   console.log(`Server running on port ${PORT}`);
 
   try {
-    await initializeEventListeners();
-    console.log("🎧 DAO event listeners initialized");
+    // // Initialize event listeners
+    // await initializeEventListeners();
+    // console.log("🎧 DAO event listeners initialized");
+
+    // Start historical data collection
+    const historicalDataService = new HistoricalDataService();
+    await historicalDataService.startDataCollection();
+    console.log("📊 Historical data collection service started");
   } catch (error) {
-    console.error("❌ Failed to initialize event listeners:", error);
+    console.error("❌ Failed to initialize services:", error);
   }
 });

@@ -36,15 +36,17 @@ export async function callAIForVoting(
     const geminiService = new GeminiService(process.env.GOOGLE_API_KEY || "");
 
     // Get relevant historical votes
-    const historicalVotes = await chromaService.queryHistoricalVotes(
+    const historicalVotesResponse = await chromaService.queryHistoricalVotes(
       proposal.description
     );
+    const historicalVotes = historicalVotesResponse.metadatas || [];
 
     // Get user's voting history
-    const userVotes = await chromaService.getUserVotingHistory(
+    const userVotesResponse = await chromaService.getUserVotingHistory(
       agent.userId,
       proposal.description
     );
+    const userVotes = userVotesResponse.metadatas || [];
 
     // Analyze proposal using Gemini
     const analysis = await geminiService.analyzeProposal(
