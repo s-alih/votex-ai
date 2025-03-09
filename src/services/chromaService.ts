@@ -15,19 +15,24 @@ export class ChromaService {
   }
 
   private async initializeCollections() {
-    // Collection for historical votes from Snapshot and Tally
-    this.historicalVotesCollection = await this.client.createCollection({
-      name: "historical_votes",
-      metadata: { description: "Historical votes from Snapshot and Tally" },
-    });
+    try {
+      // Collection for historical votes from Snapshot and Tally
+      this.historicalVotesCollection = await this.client.getOrCreateCollection({
+        name: "historical_votes",
+        metadata: { description: "Historical votes from Snapshot and Tally" },
+      });
 
-    // Collection for user-specific voting patterns
-    this.userVotesCollection = await this.client.createCollection({
-      name: "user_votes",
-      metadata: {
-        description: "User-specific voting patterns and preferences",
-      },
-    });
+      // Collection for user-specific voting patterns
+      this.userVotesCollection = await this.client.getOrCreateCollection({
+        name: "user_votes",
+        metadata: {
+          description: "User-specific voting patterns and preferences",
+        },
+      });
+    } catch (error) {
+      console.error("Error initializing collections:", error);
+      throw error;
+    }
   }
 
   async storeHistoricalVote(vote: any) {

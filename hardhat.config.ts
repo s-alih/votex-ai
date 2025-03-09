@@ -25,3 +25,5 @@ const config: HardhatUserConfig = {
 };
 
 export default config;
+
+// npx hardhat run --network sonicTestnet scripts/deploy.ts

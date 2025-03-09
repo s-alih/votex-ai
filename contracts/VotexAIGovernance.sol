@@ -7,6 +7,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 contract VotexAIGovernance is Ownable {
     struct Proposal {
         uint256 id;
+        string title;
         string description;
         uint256 yesVotes;
         uint256 noVotes;
@@ -26,7 +27,12 @@ contract VotexAIGovernance is Ownable {
     mapping(address => uint256) public aiAgentVotingPower;
     mapping(address => address) public userToAIAgent; // Map users to their AI agents
 
-    event ProposalCreated(uint256 id, string description, address proposer);
+    event ProposalCreated(
+        uint256 id,
+        string title,
+        string description,
+        address proposer
+    );
     event VoteCast(
         uint256 proposalId,
         address voter,
@@ -42,10 +48,14 @@ contract VotexAIGovernance is Ownable {
         governanceToken = IERC20(_governanceToken);
     }
 
-    function createProposal(string memory _description) external {
+    function createProposal(
+        string memory _title,
+        string memory _description
+    ) external {
         proposalCount++;
         Proposal storage proposal = proposals[proposalCount];
         proposal.id = proposalCount;
+        proposal.title = _title;
         proposal.description = _description;
         proposal.yesVotes = 0;
         proposal.noVotes = 0;
@@ -53,7 +63,7 @@ contract VotexAIGovernance is Ownable {
         proposal.executed = false;
         proposal.proposer = msg.sender;
 
-        emit ProposalCreated(proposalCount, _description, msg.sender);
+        emit ProposalCreated(proposalCount, _title, _description, msg.sender);
     }
 
     // Regular user voting function

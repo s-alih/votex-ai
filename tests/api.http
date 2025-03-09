@@ -10,7 +10,7 @@ Content-Type: application/json
   "name": "WaveForceDAO",
   "tokenAddress": "0xd18335B9e5D354354Fab33b8377E464d60CdF74e",
   "tokenSymbol": "WAVE",
-  "governanceContractAddress": "0x3BA8aE675ab5c19579dc7144635e39c5418252EB",
+  "governanceContractAddress": "0x83CFae0595557a5ef25643E83eCd9c6AC459F94A",
   "description": "WaveForceDAO 🌊⚡ is a decentralized autonomous organization powered by the Wave Token on the Sonic Blockchain. It enables community-driven governance, allowing members to vote on proposals, fund initiatives, and shape the future of the ecosystem. With a focus on"
 }
 
@@ -28,7 +28,7 @@ Content-Type: application/json
 }
 
 ###
-GET http://localhost:3001/api/users/wallet/0x18241781b17b878cFC16B109035904C8E5073e73
+GET http://localhost:3001/api/users/wallet/0x1459ca34BC6BAeD78557801605Fe8487777b30e1
 
 
 // Create a new agent
@@ -61,3 +61,16 @@ Content-Type: application/json
 }
 
 
+###
+POST http://localhost:3001/api/proposals/create
+Content-Type: application/json
+
+{
+  "title": "Empowering AI-Governed Voting in WaveForceDAO",
+  "description": "WaveForceDAO is at the forefront of decentralized governance, and it's time to integrate AI-driven decision-making into our voting process. This proposal introduces AI-assisted voting, allowing members to delegate votes to AI agents that analyze governance proposals based on data-driven insights."
+
+}
+
+
+###
+GET http://localhost:3001/api/proposals/user/0x1459ca34BC6BAeD78557801605Fe8487777b30e1

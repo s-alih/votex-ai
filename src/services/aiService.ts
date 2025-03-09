@@ -4,19 +4,8 @@ import { ChromaService } from "./chromaService";
 import { GeminiService } from "./geminiService";
 import { Vote } from "../models/vote";
 import { db } from "../config/firebase";
-
-export interface Proposal {
-  id: string;
-  daoId: string;
-  daoName: string;
-  description: string;
-  proposer: string;
-  votesFor: number;
-  votesAgainst: number;
-  executed: boolean;
-  createdAt: Date;
-  updatedAt: Date;
-}
+import { DAO } from "../models/dao";
+import { Proposal } from "../models/proposal";
 
 export async function fetchAgents(daoId: string): Promise<AIAgent[]> {
   const snapshot = await agentsRef.where("daoId", "==", daoId).get();
@@ -55,6 +44,7 @@ export async function callAIForVoting(
       historicalVotes,
       userVotes
     );
+    console.log("Analysis:", analysis);
 
     // Create vote record
     const vote: Vote = {

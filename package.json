@@ -6,7 +6,7 @@
   "scripts": {
     "build": "tsc",
     "start": "node dist/index.js",
-    "dev": "ts-node src/index.ts"
+    "dev": "nodemon --exec ts-node src/index.ts"
   },
   "keywords": [],
   "author": "",
@@ -32,6 +32,7 @@
     "chai": "^4.5.0",
     "hardhat": "^2.22.19",
     "hardhat-gas-reporter": "^1.0.10",
+    "nodemon": "^3.1.9",
     "solidity-coverage": "^0.8.14",
     "ts-node": "^10.9.2",
     "typechain": "^8.3.2",

@@ -22,6 +22,7 @@ export const createUserHandler = async (req: Request, res: Response) => {
     const daoMemberships: DAO[] = allDAOs.map((dao) => ({
       id: dao.id,
       name: dao.name,
+      imageUrl: dao.imageUrl,
       tokenAddress: dao.tokenAddress,
       tokenSymbol: dao.tokenSymbol,
       governanceContractAddress: dao.governanceContractAddress,

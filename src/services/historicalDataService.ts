@@ -10,7 +10,7 @@ export class HistoricalDataService {
   constructor() {
     this.chromaService = new ChromaService();
     this.tallyApiKey = process.env.TALLY_API_KEY || "";
-    this.snapshotApiUrl = "https://api.snapshot.org/graphql";
+    this.snapshotApiUrl = "https://hub.snapshot.org/graphql";
   }
 
   async startDataCollection() {
@@ -19,7 +19,7 @@ export class HistoricalDataService {
     //   console.log("🔄 Starting historical data collection...");
     try {
       await this.collectTallyData();
-      await this.collectSnapshotData();
+      // await this.collectSnapshotData();
       console.log("✅ Historical data collection completed");
     } catch (error) {
       console.error("❌ Error collecting historical data:", error);
@@ -29,8 +29,11 @@ export class HistoricalDataService {
 
   private async collectTallyData() {
     const query = `
-      query Proposals($first: Int!) {
-        proposals(first: $first) {
+      query Proposals {
+        proposals(
+          chainId: "eip155:1",
+          pagination: { limit: 10 }
+        ) {
           id
           title
           description
@@ -40,12 +43,19 @@ export class HistoricalDataService {
             voter {
               address
             }
-            type
+            support
+            weight
             reason
-            amount
           }
+          governor {
+            name
+            id
+            type
+            chainId
+          }
+          quorum
+          eta
           createdAt
-          updatedAt
         }
       }
     `;
@@ -54,7 +64,6 @@ export class HistoricalDataService {
       "https://api.tally.xyz/query",
       {
         query,
-        variables: { first: 100 },
       },
       {
         headers: {
@@ -74,35 +83,55 @@ export class HistoricalDataService {
         description: proposal.description,
         votes: proposal.votes,
         createdAt: proposal.createdAt,
-        updatedAt: proposal.updatedAt,
+        updatedAt: proposal.eta,
+        governorName: proposal.governor?.name,
+        governorId: proposal.governor?.id,
+        quorum: proposal.quorum,
       });
     }
   }
 
   private async collectSnapshotData() {
     const query = `
-      query Proposals($first: Int!) {
-        proposals(first: $first) {
+      query {
+        proposals (
+          first: 20,
+          skip: 0,
+          where: {
+            state: "closed"
+          },
+          orderBy: "created",
+          orderDirection: "desc"
+        ) {
           id
           title
           body
+          choices
+          start
+          end
+          snapshot
           state
+          scores
+          scores_total
+          author
+          space {
+            id
+            name
+          }
           votes {
             id
             voter
             choice
             reason
             vp
+            created
           }
-          created
-          updated
         }
       }
     `;
 
     const response = await axios.post(this.snapshotApiUrl, {
       query,
-      variables: { first: 100 },
     });
 
     const proposals = response.data.data.proposals;
@@ -113,9 +142,16 @@ export class HistoricalDataService {
         source: "snapshot",
         title: proposal.title,
         description: proposal.body,
+        choices: proposal.choices,
+        scores: proposal.scores,
+        totalScore: proposal.scores_total,
+        space: proposal.space,
+        author: proposal.author,
         votes: proposal.votes,
-        createdAt: proposal.created,
-        updatedAt: proposal.updated,
+        createdAt: proposal.start,
+        updatedAt: proposal.end,
+        state: proposal.state,
+        snapshot: proposal.snapshot,
       });
     }
   }

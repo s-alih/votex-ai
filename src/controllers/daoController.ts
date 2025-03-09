@@ -5,6 +5,7 @@ export const createDAOHandler = (req: Request, res: Response) => {
   try {
     const {
       name,
+      imageUrl,
       tokenAddress,
       tokenSymbol,
       governanceContractAddress,
@@ -18,6 +19,7 @@ export const createDAOHandler = (req: Request, res: Response) => {
 
     const newDAO = createDAO({
       name,
+      imageUrl,
       tokenAddress,
       tokenSymbol,
       governanceContractAddress,

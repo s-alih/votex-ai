@@ -4,7 +4,7 @@ import {
   HarmBlockThreshold,
 } from "@google/generative-ai";
 import { AIAgent } from "../models/agent";
-import { Proposal } from "./aiService";
+import { Proposal } from "../models/proposal";
 
 interface VoteAnalysis {
   voteType: "FOR" | "AGAINST";
@@ -13,50 +13,35 @@ interface VoteAnalysis {
   aiAnalysis: string;
 }
 
-const VOTE_ANALYSIS_PROMPT = `
-Analyze the proposal and make a voting decision based on the agent's preferences and historical voting patterns.
+const VOTE_ANALYSIS_PROMPT = `You are an AI governance analyst. Analyze the proposal and make a voting decision based on the agent's preferences and historical voting patterns.
+
 Consider the following:
 1. Agent's governance strategy
 2. Risk profile
 3. Historical voting patterns
 4. Proposal content and impact
 
-Provide a structured response with:
-- Vote decision (FOR/AGAINST)
-- Brief reason for the vote
-- Detailed explanation
-- Comprehensive analysis of potential impacts
-`;
+Provide your response in the following JSON format ONLY:
+{
+  "voteType": "FOR" or "AGAINST",
+  "voteReason": "A concise one-line reason for the vote",
+  "voteExplanation": "A detailed paragraph explaining the rationale",
+  "aiAnalysis": "A comprehensive analysis of potential impacts and considerations"
+}
+
+Do not include any other text or explanation outside of this JSON structure. The response should be valid JSON that can be parsed directly.`;
 
 export class GeminiService {
   private genAI: GoogleGenerativeAI;
   private model: any;
 
   constructor(apiKey: string) {
+    if (!apiKey) {
+      throw new Error("Google API Key is required");
+    }
     this.genAI = new GoogleGenerativeAI(apiKey);
-    this.model = this.genAI.getGenerativeModel({ model: "gemini-pro" });
-  }
-
-  async analyzeProposal(
-    proposal: Proposal,
-    agent: AIAgent,
-    historicalVotes: any[],
-    userVotes: any[]
-  ): Promise<VoteAnalysis> {
-    const context = this.buildContext(
-      proposal,
-      agent,
-      historicalVotes,
-      userVotes
-    );
-
-    const result = await this.model.generateContent({
-      contents: [
-        {
-          role: "user",
-          parts: [{ text: `${VOTE_ANALYSIS_PROMPT}\n\nContext:\n${context}` }],
-        },
-      ],
+    this.model = this.genAI.getGenerativeModel({
+      model: "gemini-1.5-flash",
       generationConfig: {
         temperature: 0.7,
         topK: 40,
@@ -70,9 +55,34 @@ export class GeminiService {
         },
       ],
     });
+  }
 
-    const response = result.response.text();
-    return this.parseResponse(response);
+  async analyzeProposal(
+    proposal: Proposal,
+    agent: AIAgent,
+    historicalVotes: any[],
+    userVotes: any[]
+  ): Promise<VoteAnalysis> {
+    try {
+      const context = this.buildContext(
+        proposal,
+        agent,
+        historicalVotes,
+        userVotes
+      );
+
+      const prompt = `${VOTE_ANALYSIS_PROMPT}\n\nContext:\n${context}`;
+      console.log("Sending prompt to Gemini:", prompt);
+
+      const result = await this.model.generateContent(prompt);
+      const response = await result.response.text();
+      console.log("Gemini raw response:", response);
+
+      return this.parseJSONResponse(response);
+    } catch (error) {
+      console.error("Error in Gemini analysis:", error);
+      return this.getDefaultAnalysis();
+    }
   }
 
   private buildContext(
@@ -82,47 +92,62 @@ export class GeminiService {
     userVotes: any[]
   ): string {
     return `
-Proposal:
-${JSON.stringify(proposal, null, 2)}
-
-Agent Preferences:
-- Governance Strategy: ${agent.governanceStrategy}
-- Risk Profile: ${agent.riskProfile}
-- Vote Alignment: ${agent.voteAlignment}
-
-Historical Similar Votes:
-${JSON.stringify(historicalVotes, null, 2)}
-
-User's Previous Votes:
-${JSON.stringify(userVotes, null, 2)}
-    `;
+Analysis Context:
+{
+  "proposal": ${JSON.stringify(proposal, null, 2)},
+  "agentPreferences": {
+    "governanceStrategy": "${agent.governanceStrategy}",
+    "riskProfile": ${agent.riskProfile},
+    "voteAlignment": "${agent.voteAlignment}"
+  },
+  "historicalVotes": ${JSON.stringify(historicalVotes, null, 2)},
+  "userVotes": ${JSON.stringify(userVotes, null, 2)}
+}`;
   }
 
-  private parseResponse(response: string): VoteAnalysis {
-    // TODO: Implement more robust parsing
-    const lines = response.split("\n");
-    let voteType: "FOR" | "AGAINST" = "FOR";
-    let voteReason = "";
-    let voteExplanation = "";
-    let aiAnalysis = "";
-
-    for (const line of lines) {
-      if (line.includes("Vote:")) {
-        voteType = line.includes("AGAINST") ? "AGAINST" : "FOR";
-      } else if (line.includes("Reason:")) {
-        voteReason = line.split("Reason:")[1].trim();
-      } else if (line.includes("Explanation:")) {
-        voteExplanation = line.split("Explanation:")[1].trim();
-      } else if (line.includes("Analysis:")) {
-        aiAnalysis = line.split("Analysis:")[1].trim();
+  private parseJSONResponse(response: string): VoteAnalysis {
+    try {
+      // Find JSON content between curly braces
+      const jsonMatch = response.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) {
+        throw new Error("No JSON found in response");
       }
-    }
 
+      const jsonResponse = JSON.parse(jsonMatch[0]);
+
+      // Validate the response structure
+      if (!this.isValidVoteAnalysis(jsonResponse)) {
+        throw new Error("Invalid response structure");
+      }
+
+      return {
+        voteType: jsonResponse.voteType,
+        voteReason: jsonResponse.voteReason,
+        voteExplanation: jsonResponse.voteExplanation,
+        aiAnalysis: jsonResponse.aiAnalysis,
+      };
+    } catch (error) {
+      console.error("Error parsing Gemini JSON response:", error);
+      return this.getDefaultAnalysis();
+    }
+  }
+
+  private isValidVoteAnalysis(response: any): response is VoteAnalysis {
+    return (
+      response &&
+      (response.voteType === "FOR" || response.voteType === "AGAINST") &&
+      typeof response.voteReason === "string" &&
+      typeof response.voteExplanation === "string" &&
+      typeof response.aiAnalysis === "string"
+    );
+  }
+
+  private getDefaultAnalysis(): VoteAnalysis {
     return {
-      voteType,
-      voteReason,
-      voteExplanation,
-      aiAnalysis,
+      voteType: "AGAINST",
+      voteReason: "API Error - defaulting to conservative vote",
+      voteExplanation: "Unable to analyze proposal due to technical issues",
+      aiAnalysis: "Analysis failed due to API error",
     };
   }
 }
