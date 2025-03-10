@@ -13,13 +13,14 @@ dotenv.config();
 
 const app = express();
 
-// Single CORS configuration
+// allowing cors
 app.use(
   cors({
     origin: "*",
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
+    preflightContinue: false,
+    optionsSuccessStatus: 204,
     allowedHeaders: ["Content-Type", "Authorization"],
-    credentials: false,
   })
 );
 
