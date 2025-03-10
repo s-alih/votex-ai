@@ -191,7 +191,7 @@ export default function Home() {
         <header className="mb-8">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <Brain className="h-8 w-8 text-primary neon-glow-primary" />
+              <img src="/logo.png" alt="VotexAI Logo" className="w-10 h-10" />
               <h1 className="sonic-heading text-2xl">VotexAI</h1>
             </div>
             <Button className="sonic-button" onClick={() => disconnect()}>
