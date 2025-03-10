@@ -12,7 +12,21 @@ import * as dotenv from "dotenv";
 dotenv.config();
 
 const app = express();
-app.use(cors());
+
+const allowedOrigins = [
+  "https://votex-ai.vercel.app",
+  // Add other allowed origins here
+];
+
+app.use(
+  cors({
+    origin: process.env.NODE_ENV === "production" ? allowedOrigins : "*",
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: true,
+  })
+);
+
 app.use(express.json());
 
 app.use("/api/users", userRoutes);
