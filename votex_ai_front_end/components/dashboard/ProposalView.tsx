@@ -13,7 +13,6 @@ import {
   ChartBar,
   Users,
   Shield,
-  AlertTriangle,
   TrendingUp,
   DollarSign,
   Scale,
@@ -23,8 +22,6 @@ import {
 import { formatDistanceToNow } from "date-fns";
 import { useEffect } from "react";
 import { useContractWrite, useAccount } from "wagmi";
-import { parseAbiItem } from "viem";
-
 export interface Vote {
   id: string;
   proposalId: string;

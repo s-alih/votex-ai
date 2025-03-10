@@ -27,15 +27,13 @@ import {
 import {
   useAccount,
   useBalance,
-  useContractRead,
-  useContractWrite,
+
 } from "wagmi";
 import {
   parseEther,
   formatEther,
   createPublicClient,
   http,
-  getContract,
 } from "viem";
 import { erc20Abi } from "viem";
 import { sonicTestnet } from "@/config/chains";
