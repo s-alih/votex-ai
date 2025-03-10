@@ -115,6 +115,7 @@ export default function AIConfigView() {
   const [delegatingAgent, setDelegatingAgent] = useState<string | null>(null);
   const [agentVotes, setAgentVotes] = useState<Vote[]>([]);
   const [isLoadingVotes, setIsLoadingVotes] = useState(false);
+  const [isLoadingDAOs, setIsLoadingDAOs] = useState(true);
 
   // Fetch user data to get agent wallet
   useEffect(() => {
@@ -285,6 +286,7 @@ export default function AIConfigView() {
   useEffect(() => {
     const fetchDAOs = async () => {
       try {
+        setIsLoadingDAOs(true);
         const response = await fetch(
           `${process.env.NEXT_PUBLIC_API_URL}/api/daos/all`
         );
@@ -292,11 +294,12 @@ export default function AIConfigView() {
           const data = await response.json();
           console.log("Fetched DAOs:", data);
           setDaos(data.daos || []);
-          // available DAOs that where we don't have an agent for the user
           setAvailableDAOs(data.daos || []);
         }
       } catch (error) {
         console.error("Error fetching DAOs:", error);
+      } finally {
+        setIsLoadingDAOs(false);
       }
     };
 
@@ -431,14 +434,24 @@ export default function AIConfigView() {
             <Label>Select DAO to Configure</Label>
             <Select value={selectedDAO} onValueChange={setSelectedDAO}>
               <SelectTrigger>
-                <SelectValue placeholder="Choose a DAO" />
+                <SelectValue
+                  placeholder={
+                    isLoadingDAOs ? "Loading DAOs..." : "Choose a DAO"
+                  }
+                />
               </SelectTrigger>
               <SelectContent>
-                {availableDAOs.map((dao: DAO) => (
-                  <SelectItem key={dao.id} value={dao.id}>
-                    {dao.name}
-                  </SelectItem>
-                ))}
+                {isLoadingDAOs ? (
+                  <div className="flex items-center justify-center py-2">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+                  </div>
+                ) : (
+                  availableDAOs.map((dao: DAO) => (
+                    <SelectItem key={dao.id} value={dao.id}>
+                      {dao.name}
+                    </SelectItem>
+                  ))
+                )}
               </SelectContent>
             </Select>
           </div>
