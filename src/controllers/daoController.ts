@@ -10,7 +10,6 @@ export const createDAOHandler = (req: Request, res: Response) => {
       tokenSymbol,
       governanceContractAddress,
       description,
-      website,
     } = req.body;
 
     if (!name || !tokenAddress || !tokenSymbol || !governanceContractAddress) {

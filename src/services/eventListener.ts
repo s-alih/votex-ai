@@ -87,7 +87,7 @@ async function pollForEvents(contract: ethers.Contract, dao: any) {
 
       // Create proposal object
       const proposal: Proposal = {
-        id: id.toString(),
+        id: `${dao.id}-${id}`,
         daoId: dao.id,
         dao: dao,
         daoName: dao.name,
@@ -107,23 +107,25 @@ async function pollForEvents(contract: ethers.Contract, dao: any) {
 
       // Fetch AI agents for this DAO
       const agents = await fetchAgents(dao.id);
+      console.log("🤖 Found agents:", agents);
       for (const agent of agents) {
         await callAIForVoting(proposal, agent);
       }
     }
 
-    // Process VoteCast events
-    for (const event of voteEvents) {
-      const args = (event as ethers.EventLog).args;
-      if (!args) continue;
+    // // Process VoteCast events
+    // for (const event of voteEvents) {
+    //   const args = (event as ethers.EventLog).args;
+    //   if (!args) continue;
 
-      const [proposalId, voter, vote, weight] = args;
-      const proposal = await getProposal(proposalId);
-      if (proposal) {
-        proposal.votesFor += weight;
-        await updateProposal(proposal);
-      }
-    }
+    //   const [proposalId, voter, vote, weight] = args;
+
+    //   const proposal = await getProposal(proposalId);
+    //   if (proposal) {
+    //     proposal.votesFor += weight;
+    //     await updateProposal(proposal);
+    //   }
+    // }
 
     // Update the last processed block
     lastProcessedBlocks[dao.governanceContractAddress] = currentBlock;

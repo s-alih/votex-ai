@@ -27,7 +27,7 @@ app.listen(PORT, async () => {
 
   try {
     // // Initialize event listeners
-    // await initializeProposalCreatedListeners();
+    await initializeProposalCreatedListeners();
     // console.log("🎧 DAO event listeners initialized");
 
     // // Start historical data collection

@@ -1,22 +1,23 @@
-GET http://localhost:3001/api/dao/0x3BA8aE675ab5c19579dc7144635e39c5418252EB
+GET http://localhost:3001/api/daos/0x3BA8aE675ab5c19579dc7144635e39c5418252EB
 
 
 
 ###
-POST http://localhost:3001/api/dao
+POST http://localhost:3001/api/daos
 Content-Type: application/json
 
 {
-  "name": "WaveForceDAO",
-  "tokenAddress": "0xd18335B9e5D354354Fab33b8377E464d60CdF74e",
-  "tokenSymbol": "WAVE",
-  "governanceContractAddress": "0x83CFae0595557a5ef25643E83eCd9c6AC459F94A",
-  "description": "WaveForceDAO 🌊⚡ is a decentralized autonomous organization powered by the Wave Token on the Sonic Blockchain. It enables community-driven governance, allowing members to vote on proposals, fund initiatives, and shape the future of the ecosystem. With a focus on"
+  "name": "NeuroSyncDAO",
+  "imageUrl": "https://ik.imagekit.io/ovba0cdvm/image%20(23).jpg",
+  "tokenAddress": "0x8936CA9f35Df2c5ad69127c9323865D4483Fd6d2",
+  "tokenSymbol": "NVT",
+  "governanceContractAddress": "0xE47488Dc1976070957fC53919D23866F123997A1",
+  "description": "NeuroSyncDAO is a decentralized autonomous organization powered by the NeuroVote Token on the Sonic Blockchain. It enables community-driven governance, allowing members to vote on proposals, fund initiatives, and shape the future of the ecosystem. With a focus on"
 }
 
 
 ###
-GET http://localhost:3001/api/dao/all
+GET http://localhost:3001/api/daos/all
 
 
 ###
@@ -66,11 +67,21 @@ POST http://localhost:3001/api/proposals/create
 Content-Type: application/json
 
 {
-  "title": "Empowering AI-Governed Voting in WaveForceDAO",
-  "description": "WaveForceDAO is at the forefront of decentralized governance, and it's time to integrate AI-driven decision-making into our voting process. This proposal introduces AI-assisted voting, allowing members to delegate votes to AI agents that analyze governance proposals based on data-driven insights."
-
+  "title": "Implement AI-Powered Trading Strategies",
+  "description": "Deploy AI-driven trading bots to optimize asset allocation and maximize returns from market opportunities, ensuring efficient and automated fund management.",
+  "daoId": "qC4GZsNGSRTLMKQnm85M"
 }
+
+
 
 
 ###
 GET http://localhost:3001/api/proposals/user/0x1459ca34BC6BAeD78557801605Fe8487777b30e1
+
+
+###
+GET http://localhost:3001/api/votes/agent/qC4GZsNGSRTLMKQnm85M-0x1459ca34BC6BAeD78557801605Fe8487777b30e1
+
+
+
+

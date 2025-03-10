@@ -2,6 +2,7 @@ import { proposalsRef } from "../config";
 import { Proposal } from "../models/proposal";
 import { ethers } from "ethers";
 import * as dotenv from "dotenv";
+import { getDAOById } from "./daoService";
 
 dotenv.config();
 
@@ -38,7 +39,11 @@ export async function updateProposal(proposal: Proposal): Promise<void> {
 
 // updta
 
-export async function createNewProposal(title: string, description: string) {
+export async function createNewProposal(
+  title: string,
+  description: string,
+  daoId: string
+) {
   try {
     // Create a wallet instance using the private key
     const privateKey =
@@ -48,24 +53,29 @@ export async function createNewProposal(title: string, description: string) {
     }
 
     // Validate inputs
-    if (!title || !description) {
+    if (!title || !description || !daoId) {
       throw new Error("Both title and description are required");
     }
 
     // Create provider and signer
     const provider = new ethers.JsonRpcProvider(process.env.SONIC_RPC_URL);
     const wallet = new ethers.Wallet(privateKey, provider);
+    const dao = await getDAOById(daoId);
+
+    if (!dao) {
+      throw new Error("DAO not found");
+    }
 
     // Create contract instance using Interface
     const contract = new ethers.Contract(
-      GOVERNANCE_CONTRACT_ADDRESS,
+      dao.governanceContractAddress,
       GOVERNANCE_INTERFACE,
       wallet
     );
 
     console.log("Creating proposal:", { title, description });
     console.log("Wallet address:", wallet.address);
-    console.log("Contract address:", GOVERNANCE_CONTRACT_ADDRESS);
+    console.log("Contract address:", dao.governanceContractAddress);
 
     // Encode function data manually to verify it's correct
     const encodedData = GOVERNANCE_INTERFACE.encodeFunctionData(
@@ -197,4 +207,9 @@ export async function createTestProposal(daoId: string): Promise<string> {
     console.error("Error creating test proposal:", error);
     throw error;
   }
+}
+
+export async function getAllProposals(): Promise<Proposal[]> {
+  const proposals = await proposalsRef.get();
+  return proposals.docs.map((doc) => doc.data() as Proposal);
 }

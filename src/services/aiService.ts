@@ -50,7 +50,9 @@ export async function callAIForVoting(
     const vote: Vote = {
       id: `${proposal.id}_${agent.userId}`,
       proposalId: proposal.id,
+      proposal: proposal,
       userId: agent.userId,
+      agentId: agent.id || "",
       dao: agent.dao,
       user: agent.user,
       agent: agent,

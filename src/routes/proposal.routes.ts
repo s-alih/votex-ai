@@ -4,13 +4,14 @@ import {
   getProposalsByUserId,
   getActiveProposals,
   createTestProposal,
+  getAllProposals,
 } from "../services/proposalService";
 
 const router = Router();
 
 router.post("/create", async (req: Request, res: Response): Promise<void> => {
   try {
-    const { title, description } = req.body;
+    const { title, description, daoId } = req.body;
 
     if (!title || !description) {
       res
@@ -19,7 +20,7 @@ router.post("/create", async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
-    const proposalId = await createNewProposal(title, description);
+    const proposalId = await createNewProposal(title, description, daoId);
     res.status(201).json({
       message: "Proposal created successfully",
       proposalId,
@@ -31,6 +32,12 @@ router.post("/create", async (req: Request, res: Response): Promise<void> => {
       details: error instanceof Error ? error.message : "Unknown error",
     });
   }
+});
+
+// get all proposals
+router.get("/all", async (req: Request, res: Response) => {
+  const proposals = await getAllProposals();
+  res.status(200).json({ proposals });
 });
 
 // Get active proposals

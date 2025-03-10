@@ -17,7 +17,10 @@ import { injected } from "wagmi/connectors";
 import DashboardView from "@/components/dashboard/DashboardView";
 import AIConfigView from "@/components/dashboard/AIConfigView";
 import WalletView from "@/components/dashboard/WalletView";
-import ProposalView from "@/components/dashboard/ProposalView";
+import ProposalView, {
+  type Proposal,
+  type Vote,
+} from "@/components/dashboard/ProposalView";
 
 interface User {
   walletAddress: string;
@@ -33,8 +36,12 @@ export default function Home() {
   const { connect } = useConnect();
   const { disconnect } = useDisconnect();
   const [user, setUser] = useState<User | null>(null);
-  const [selectedProposal, setSelectedProposal] = useState(null);
+  const [selectedProposal, setSelectedProposal] = useState<Proposal | null>(
+    null
+  );
+  const [selectedVote, setSelectedVote] = useState<Vote | undefined>(undefined);
   const [isLoading, setIsLoading] = useState(false);
+  const [votes, setVotes] = useState<Vote[]>([]);
 
   useEffect(() => {
     const checkUser = async () => {
@@ -84,19 +91,9 @@ export default function Home() {
 
       if (createUserResponse.ok) {
         const newUser = await createUserResponse.json();
+        setUser(newUser);
 
         // Then create agent wallet
-        const createAgentResponse = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/api/users/${address}/create-agent`,
-          {
-            method: "POST",
-          }
-        );
-
-        if (createAgentResponse.ok) {
-          const updatedUser = await createAgentResponse.json();
-          setUser(updatedUser);
-        }
       }
     } catch (error) {
       console.error("Error creating user and agent:", error);
@@ -105,16 +102,24 @@ export default function Home() {
     }
   };
 
+  const handleSelectProposal = (proposal: Proposal, vote: Vote) => {
+    setSelectedProposal(proposal);
+    setSelectedVote(vote);
+  };
+
   if (!isConnected) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="sonic-container">
           <div className="sonic-card max-w-lg w-full mx-4">
             <div className="text-center space-y-6">
-              <Brain className="w-20 h-20 mx-auto text-primary animate-pulse" />
+              <img
+                src="/logo.png"
+                alt="VotexAI Logo"
+                className="w-60  h-50 mx-auto"
+              />
               <h1 className="sonic-heading">VotexAI</h1>
               <div className="space-y-2">
-                <h2 className="sonic-heading text-2xl">Connect Your Wallet</h2>
                 <p className="sonic-subheading">
                   Connect your wallet to start participating in DAO governance
                 </p>
@@ -168,7 +173,12 @@ export default function Home() {
         <div className="sonic-container py-8">
           <ProposalView
             proposal={selectedProposal}
-            onBack={() => setSelectedProposal(null)}
+            vote={selectedVote}
+            votes={votes}
+            onBack={() => {
+              setSelectedProposal(null);
+              setSelectedVote(undefined);
+            }}
           />
         </div>
       </div>
@@ -217,7 +227,7 @@ export default function Home() {
           </TabsList>
 
           <TabsContent value="dashboard">
-            <DashboardView onSelectProposal={setSelectedProposal} />
+            <DashboardView onSelectProposal={handleSelectProposal} />
           </TabsContent>
 
           <TabsContent value="ai-config">

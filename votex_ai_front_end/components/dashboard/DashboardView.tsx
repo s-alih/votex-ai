@@ -38,13 +38,18 @@ interface Vote {
     imageUrl: string;
     tokenSymbol: string;
   };
-
+  userId: string;
+  agentId: string;
   voteType?: "FOR" | "AGAINST";
   isVoted: boolean;
   suggestedVote?: "FOR" | "AGAINST";
   voteReason?: string;
+  voteExplanation?: string;
+  aiAnalysis?: string;
   timestamp: number;
   txHash?: string;
+  agent?: any;
+  user?: any;
 }
 
 interface FirestoreTimestamp {
@@ -58,6 +63,7 @@ interface Proposal {
   dao: {
     name: string;
     imageUrl: string;
+    governanceContractAddress: string;
   };
   title: string;
   description: string;
@@ -68,7 +74,7 @@ interface Proposal {
 }
 
 interface DashboardViewProps {
-  onSelectProposal: (proposal: any) => void;
+  onSelectProposal: (proposal: Proposal, vote: Vote) => void;
 }
 
 export default function DashboardView({
@@ -78,6 +84,11 @@ export default function DashboardView({
   const [votes, setVotes] = useState<Vote[]>([]);
   const [proposals, setProposals] = useState<Proposal[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Add debug logging for votes
+  useEffect(() => {
+    console.log("Current votes:", votes);
+  }, [votes]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -98,7 +109,8 @@ export default function DashboardView({
         );
         if (!votesResponse.ok) throw new Error("Failed to fetch votes");
         const votesData = await votesResponse.json();
-        setVotes(votesData.votes);
+        console.log("Fetched votes data:", votesData);
+        setVotes(votesData.votes || []);
 
         // Fetch active proposals
         const proposalsResponse = await fetch(
@@ -106,15 +118,7 @@ export default function DashboardView({
         );
         if (!proposalsResponse.ok) throw new Error("Failed to fetch proposals");
         const proposalsData = await proposalsResponse.json();
-        console.log("Fetched proposals:", proposalsData);
-        console.log(
-          "Sample proposal deadline format:",
-          proposalsData.proposals?.[0]?.deadline
-        );
-        setProposals(proposalsData.proposals);
-
-        // Log the votes data
-        console.log("Fetched votes:", votesData);
+        setProposals(proposalsData.proposals || []);
       } catch (error) {
         console.error("Error fetching dashboard data:", error);
       } finally {
@@ -125,11 +129,31 @@ export default function DashboardView({
     fetchData();
   }, [address]);
 
+  // Helper function to find vote for a proposal
+  const findVoteForProposal = (proposalId: string) => {
+    console.log("Finding vote for proposal:", proposalId);
+    console.log("Available votes:", votes);
+    const vote = votes.find((v) => v.proposalId === proposalId);
+    console.log("Found vote:", vote);
+    return vote;
+  };
+
   // Add logging for state updates
   useEffect(() => {
     console.log("Current proposals state:", proposals);
     console.log("Current votes state:", votes);
   }, [proposals, votes]);
+
+  // Update the click handler to directly pass the vote without transformation
+  const handleProposalClick = (proposal: Proposal, vote: Vote) => {
+    console.log("handleProposalClick - Proposal:", proposal.id);
+    console.log("handleProposalClick - Vote data being passed:", vote);
+    if (!vote) {
+      console.error("No vote data available for proposal:", proposal.id);
+      return;
+    }
+    onSelectProposal(proposal, vote);
+  };
 
   if (isLoading) {
     return (
@@ -191,9 +215,8 @@ export default function DashboardView({
 
             <div className="space-y-4">
               {dao.proposals.map((proposal: Proposal) => {
-                console.log("Proposal:", proposal.id);
-                const vote = votes.find((v) => v.proposalId === proposal.id);
-                console.log("Vote:", vote);
+                const vote = findVoteForProposal(proposal.id);
+                console.log(`Found vote for proposal ${proposal.id}:`, vote);
                 const totalVotes = proposal.votesFor + proposal.votesAgainst;
                 const forPercentage =
                   totalVotes > 0 ? (proposal.votesFor / totalVotes) * 100 : 0;
@@ -233,22 +256,33 @@ export default function DashboardView({
                               AI Vote {vote.isVoted ? "Cast" : "Prediction"}
                             </span>
                           </div>
-                          <Badge
-                            variant={
-                              (vote.voteType || vote.suggestedVote) === "FOR"
-                                ? "default"
-                                : "destructive"
-                            }
-                            className={`${
-                              (vote.voteType || vote.suggestedVote) === "FOR"
-                                ? "bg-primary/20"
-                                : "bg-destructive/20"
-                            } text-lg`}
-                          >
-                            {vote.isVoted
-                              ? `Voted ${vote.voteType}`
-                              : `Will Vote ${vote.suggestedVote}`}
-                          </Badge>
+                          <div>
+                            <Badge
+                              variant={
+                                (vote.voteType || vote.suggestedVote) === "FOR"
+                                  ? "default"
+                                  : "destructive"
+                              }
+                              className={`${
+                                (vote.voteType || vote.suggestedVote) === "FOR"
+                                  ? "bg-primary/20"
+                                  : "bg-destructive/20"
+                              } text-lg`}
+                            >
+                              {vote.isVoted
+                                ? `Will Vote ${vote.voteType}  `
+                                : `Will Vote ${vote.suggestedVote}`}
+                            </Badge>
+                            <div className="flex items-center space-x-2">
+                              <Timer className="mr-1 h-5 w-7" />
+                              {formatDistanceToNow(
+                                convertToDate(proposal.deadline),
+                                {
+                                  addSuffix: true,
+                                }
+                              )}
+                            </div>
+                          </div>
                         </div>
                         <div className="text-sm text-muted-foreground">
                           {vote.voteReason}
@@ -257,18 +291,23 @@ export default function DashboardView({
                     )}
 
                     <div className="space-y-2">
-                      <Progress value={forPercentage} className="h-2" />
-                      <div className="flex justify-between text-sm text-muted-foreground">
+                      {/* <Progress value={forPercentage} className="h-2" /> */}
+                      {/* <div className="flex justify-between text-sm text-muted-foreground">
                         <span>For: {forPercentage.toFixed(1)}%</span>
                         <span>Against: {againstPercentage.toFixed(1)}%</span>
-                      </div>
+                      </div> */}
                     </div>
 
                     <div className="flex items-center space-x-3">
                       <Button
                         variant="outline"
                         className="flex-1 bg-background/30"
-                        onClick={() => onSelectProposal(proposal)}
+                        onClick={() => {
+                          console.log("Clicking with vote data:", vote);
+                          if (vote) {
+                            handleProposalClick(proposal, vote);
+                          }
+                        }}
                       >
                         <ExternalLink className="mr-2 h-4 w-4" />
                         View AI Analysis

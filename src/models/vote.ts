@@ -1,10 +1,13 @@
 import { AIAgent } from "./agent";
 import { DAO } from "./dao";
+import { Proposal } from "./proposal";
 import { User } from "./user";
 
 export interface Vote {
   id: string; // Unique vote ID (UUID)
   proposalId: string; // Proposal ID the vote is for
+  agentId: string;
+  proposal: Proposal;
   userId: string;
   dao: DAO; // Full DAO object
   user: User; // Full User object

@@ -12,6 +12,9 @@ const spaceGrotesk = Space_Grotesk({
 export const metadata: Metadata = {
   title: "VotexAI",
   description: "AI-powered DAO governance platform",
+  icons: {
+    icon: "/logo.png",
+  },
 };
 
 export default function RootLayout({

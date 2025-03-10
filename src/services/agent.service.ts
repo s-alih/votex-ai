@@ -29,6 +29,7 @@ export const createAIAgent = async (
 
   const newAgent: AIAgent = {
     ...agentData,
+    id: `${agentData.daoId}-${agentData.userId}`,
     user, // Store full user object
   };
 

@@ -7,7 +7,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 contract VotexToken is ERC20, Ownable {
     constructor(
         uint256 initialSupply
-    ) ERC20("WAVE", "WAVE") Ownable(msg.sender) {
+    ) ERC20("NeuroVote", "NVT") Ownable(msg.sender) {
         _mint(msg.sender, initialSupply * 10 ** decimals());
     }
 

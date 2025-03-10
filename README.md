@@ -98,6 +98,11 @@ Votex AI is proudly built on the Sonic blockchain, focusing on DAOs within the S
 - **Chain ID**: 57054
 - **Explorer**: [Sonic Testnet Explorer](https://testnet.sonicscan.org/)
 
+### Deployed Smart Contracts
+- `WaveForceDAO`: https://testnet.sonicscan.org/address/0x83CFae0595557a5ef25643E83eCd9c6AC459F94A
+- `NeuroSyncDAO`:https://testnet.sonicscan.org/address/0xE47488Dc1976070957fC53919D23866F123997A1
+
+
 ## 🛠️ Technical Architecture
 
 ### Frontend
@@ -167,12 +172,23 @@ npm run dev
 
 ## 🔧 Smart Contract Integration
 
+
+
 ### Core Contracts and Functions
 - `VotexAIGovernance.sol`: Main governance contract
 - `delegateVote()`: Delegate voting power to AI agent
 - `undelegateVote()`: Undelegate voting power from AI agent
 - `createProposal(string _title, string _description)`: Create new proposals
 - `vote(uint256 _proposalId, bool _vote)`: Cast votes on proposals
+
+
+### Smart Contract Deployment
+
+commands to deploy the smart contracts:
+```bash
+npx hardhat compile
+npx hardhat deploy --network sonicTestnet --private-key $PRIVATE_KEY
+```
 
 
 ### Development Process

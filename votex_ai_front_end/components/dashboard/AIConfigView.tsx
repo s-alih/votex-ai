@@ -44,12 +44,21 @@ import { parseAbi } from "viem";
 import { toast } from "sonner";
 
 interface Vote {
-  id: number;
-  proposal: string;
-  vote: "approve" | "reject";
-  confidence: number;
-  outcome: "correct" | "incorrect" | "pending";
-  timestamp: string;
+  id: string;
+  proposalId: string;
+  proposal: {
+    id: string;
+    title: string;
+    description: string;
+  };
+  voteType?: "FOR" | "AGAINST";
+  isVoted: boolean;
+  suggestedVote?: "FOR" | "AGAINST";
+  voteReason?: string;
+  voteExplanation?: string;
+  aiAnalysis?: string;
+  timestamp: number;
+  txHash?: string;
 }
 
 interface Agent {
@@ -79,7 +88,7 @@ interface User {
   walletAddress: string;
   agentWallet: string;
   agentWalletPrivateKey: string;
-  daoMemberships: any[];
+  daoMemberships: DAO[];
   createdAt: any;
   updatedAt: any;
 }
@@ -98,13 +107,11 @@ const GOVERNANCE_CONTRACT_ABI = parseAbi([
   "event AIAgentVoteCast(uint256 proposalId, address indexed agent, address indexed user, bool vote, uint256 weight)",
 ]);
 
-const GOVERNANCE_CONTRACT_ADDRESS = process.env
-  .NEXT_PUBLIC_GOVERNANCE_CONTRACT_ADDRESS as `0x${string}`;
-
 export default function AIConfigView() {
   const { address } = useAccount();
   const [agents, setAgents] = useState<Agent[]>([]);
   const [daos, setDaos] = useState<DAO[]>([]);
+  const [availableDAOs, setAvailableDAOs] = useState<DAO[]>([]);
   const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null);
   const [showNewAgent, setShowNewAgent] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -114,6 +121,8 @@ export default function AIConfigView() {
   const [voteAlignment, setVoteAlignment] = useState("independent");
   const [user, setUser] = useState<User | null>(null);
   const [delegatingAgent, setDelegatingAgent] = useState<string | null>(null);
+  const [agentVotes, setAgentVotes] = useState<Vote[]>([]);
+  const [isLoadingVotes, setIsLoadingVotes] = useState(false);
 
   // Fetch user data to get agent wallet
   useEffect(() => {
@@ -155,7 +164,7 @@ export default function AIConfigView() {
       if (agent.isAutoVoteEnabled) {
         // Revoke delegation
         delegateVoteToggle({
-          address: GOVERNANCE_CONTRACT_ADDRESS,
+          address: agent.dao.governanceContractAddress as `0x${string}`,
           abi: GOVERNANCE_CONTRACT_ABI,
           functionName: "revokeDelegation",
         });
@@ -163,7 +172,7 @@ export default function AIConfigView() {
       } else {
         // Delegate votes
         delegateVoteToggle({
-          address: GOVERNANCE_CONTRACT_ADDRESS,
+          address: agent.dao.governanceContractAddress as `0x${string}`,
           abi: GOVERNANCE_CONTRACT_ABI,
           functionName: "delegateVote",
           args: [user.agentWallet as `0x${string}`],
@@ -268,7 +277,8 @@ export default function AIConfigView() {
     try {
       // First delegate voting power to AI agent
       delegateVoteToggle({
-        address: GOVERNANCE_CONTRACT_ADDRESS,
+        address: daos.find((dao) => dao.id === selectedDAO)
+          ?.governanceContractAddress as `0x${string}`,
         abi: GOVERNANCE_CONTRACT_ABI,
         functionName: "delegateVote",
         args: [user.agentWallet as `0x${string}`],
@@ -284,12 +294,14 @@ export default function AIConfigView() {
     const fetchDAOs = async () => {
       try {
         const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/api/dao/all`
+          `${process.env.NEXT_PUBLIC_API_URL}/api/daos/all`
         );
         if (response.ok) {
           const data = await response.json();
           console.log("Fetched DAOs:", data);
           setDaos(data.daos || []);
+          // available DAOs that where we don't have an agent for the user
+          setAvailableDAOs(data.daos || []);
         }
       } catch (error) {
         console.error("Error fetching DAOs:", error);
@@ -314,6 +326,13 @@ export default function AIConfigView() {
           console.log("Fetched agents data:", data); // Debug log
           if (Array.isArray(data.agents)) {
             setAgents(data.agents);
+            // remove the DAOs that the user already has an agent for
+            setAvailableDAOs(
+              availableDAOs.filter(
+                (dao: DAO) =>
+                  !data.agents.some((agent: Agent) => agent.daoId === dao.id)
+              )
+            );
           } else {
             console.error("Invalid agents data format:", data);
             setAgents([]);
@@ -372,6 +391,36 @@ export default function AIConfigView() {
     updateAgentAfterDelegation();
   }, [isDelegationToggleSuccess, delegatingAgent, address]);
 
+  // Add effect to fetch votes when agent is selected
+  useEffect(() => {
+    const fetchAgentVotes = async () => {
+      if (!selectedAgent || !address) return;
+
+      try {
+        setIsLoadingVotes(true);
+        const agentId = `${selectedAgent.daoId}-${address}`;
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/votes/agent/${agentId}`
+        );
+
+        if (response.ok) {
+          const data = await response.json();
+          setAgentVotes(data.votes || []);
+        } else {
+          console.error("Failed to fetch agent votes:", response.status);
+          setAgentVotes([]);
+        }
+      } catch (error) {
+        console.error("Error fetching agent votes:", error);
+        setAgentVotes([]);
+      } finally {
+        setIsLoadingVotes(false);
+      }
+    };
+
+    fetchAgentVotes();
+  }, [selectedAgent, address]);
+
   if (showNewAgent) {
     return (
       <Card className="p-6 backdrop-blur-xl bg-background/30">
@@ -393,7 +442,7 @@ export default function AIConfigView() {
                 <SelectValue placeholder="Choose a DAO" />
               </SelectTrigger>
               <SelectContent>
-                {daos.map((dao) => (
+                {availableDAOs.map((dao: DAO) => (
                   <SelectItem key={dao.id} value={dao.id}>
                     {dao.name}
                   </SelectItem>
@@ -598,71 +647,134 @@ export default function AIConfigView() {
 
           <div className="space-y-4">
             <h3 className="text-xl font-semibold">Voting History & Training</h3>
-            {selectedAgent.votes?.map((vote) => (
-              <Card
-                key={vote.id}
-                className="p-4 backdrop-blur-xl bg-background/30"
-              >
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h4 className="font-medium">{vote.proposal}</h4>
-                    <div className="flex items-center space-x-2 mt-1">
-                      <Badge
-                        variant={
-                          vote.vote === "approve" ? "default" : "destructive"
-                        }
-                        className={
-                          vote.vote === "approve"
-                            ? "bg-primary/20"
-                            : "bg-destructive/20"
-                        }
-                      >
-                        {vote.vote === "approve" ? "For" : "Against"} (
-                        {vote.confidence}%)
-                      </Badge>
-                      {vote.outcome !== "pending" && (
-                        <Badge
-                          variant={
-                            vote.outcome === "correct"
-                              ? "default"
-                              : "destructive"
-                          }
-                          className={
-                            vote.outcome === "correct"
-                              ? "bg-accent/20"
-                              : "bg-destructive/20"
-                          }
-                        >
-                          {vote.outcome === "correct" ? "Correct" : "Incorrect"}
-                        </Badge>
+            {isLoadingVotes ? (
+              <div className="flex items-center justify-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+              </div>
+            ) : agentVotes.length === 0 ? (
+              <Card className="p-4 backdrop-blur-xl bg-background/30">
+                <p className="text-center text-muted-foreground">
+                  No votes found for this agent
+                </p>
+              </Card>
+            ) : (
+              agentVotes.map((vote) => (
+                <Card
+                  key={vote.id}
+                  className="p-4 backdrop-blur-xl bg-background/30"
+                >
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-1">
+                        <h4 className="font-medium text-lg">
+                          {vote.proposal.title}
+                        </h4>
+                        <p className="text-sm text-muted-foreground line-clamp-2">
+                          {vote.proposal.description}
+                        </p>
+                      </div>
+                      <div className="flex flex-col items-end space-y-2">
+                        <div className="flex items-center space-x-2">
+                          {vote.isVoted ? (
+                            <Badge
+                              variant={
+                                vote.voteType === "FOR"
+                                  ? "default"
+                                  : "destructive"
+                              }
+                              className={
+                                vote.voteType === "FOR"
+                                  ? "bg-primary/20"
+                                  : "bg-destructive/20"
+                              }
+                            >
+                              Voted {vote.voteType}
+                            </Badge>
+                          ) : (
+                            <Badge
+                              variant="outline"
+                              className="bg-yellow-500/20"
+                            >
+                              Pending Vote
+                            </Badge>
+                          )}
+                          {vote.txHash && (
+                            <a
+                              href={`https://explorer.testnet.mantle.xyz/tx/${vote.txHash}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-xs text-primary hover:underline"
+                            >
+                              View Transaction
+                            </a>
+                          )}
+                        </div>
+                        <span className="text-xs text-muted-foreground">
+                          {new Date(vote.timestamp).toLocaleDateString()}{" "}
+                          {new Date(vote.timestamp).toLocaleTimeString()}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2 bg-background/40 rounded-lg p-3">
+                      {vote.suggestedVote && (
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-medium">
+                            AI Suggestion:
+                          </span>
+                          <Badge variant="outline" className="bg-primary/10">
+                            {vote.suggestedVote}
+                          </Badge>
+                        </div>
+                      )}
+                      {vote.voteReason && (
+                        <div>
+                          <span className="text-sm font-medium">Reason:</span>
+                          <p className="text-sm text-muted-foreground mt-1">
+                            {vote.voteReason}
+                          </p>
+                        </div>
+                      )}
+                      {vote.aiAnalysis && (
+                        <div>
+                          <span className="text-sm font-medium">Analysis:</span>
+                          <p className="text-sm text-muted-foreground mt-1">
+                            {vote.aiAnalysis}
+                          </p>
+                        </div>
                       )}
                     </div>
-                  </div>
-                  {vote.outcome === "pending" ? (
-                    <span className="text-sm text-muted-foreground">
-                      Pending
-                    </span>
-                  ) : (
-                    <div className="flex space-x-2">
+
+                    <div className="flex justify-end space-x-2">
                       <Button
                         size="sm"
                         variant="outline"
                         className="bg-accent/20"
+                        onClick={() => {
+                          // TODO: Implement feedback
+                          toast.success("Thank you for your feedback!");
+                        }}
                       >
-                        <ThumbsUp className="h-4 w-4" />
+                        <ThumbsUp className="h-4 w-4 mr-1" />
+                        Helpful
                       </Button>
                       <Button
                         size="sm"
                         variant="outline"
                         className="bg-destructive/20"
+                        onClick={() => {
+                          // TODO: Implement feedback
+                          toast.success("Thank you for your feedback!");
+                        }}
                       >
-                        <ThumbsDown className="h-4 w-4" />
+                        <ThumbsDown className="h-4 w-4 mr-1" />
+                        Not Helpful
                       </Button>
                     </div>
-                  )}
-                </div>
-              </Card>
-            ))}
+                  </div>
+                </Card>
+              ))
+            )}
           </div>
         </Card>
       </div>

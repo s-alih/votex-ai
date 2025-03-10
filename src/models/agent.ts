@@ -2,6 +2,7 @@ import { User } from "./user";
 import { DAO } from "./dao";
 
 export interface AIAgent {
+  id?: string;
   userId: string;
   daoId: string;
   isAutoVoteEnabled: boolean;

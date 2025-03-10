@@ -14,3 +14,17 @@ export const getVotesByUserId = async (userId: string): Promise<Vote[]> => {
   const votes: Vote[] = votesSnapshot.docs.map((doc) => doc.data() as Vote);
   return votes;
 };
+
+export const getVotesByAgentId = async (agentId: string): Promise<Vote[]> => {
+  const votesSnapshot = await db
+    .collection("votes")
+    .where("agentId", "==", agentId)
+    .get();
+
+  if (votesSnapshot.empty) {
+    return [];
+  }
+
+  const votes: Vote[] = votesSnapshot.docs.map((doc) => doc.data() as Vote);
+  return votes;
+};

@@ -324,7 +324,7 @@ export default function WalletView() {
             <div className="flex items-center space-x-4">
               <Wallet className="h-8 w-8 text-primary" />
               <div>
-                <h2 className="text-2xl font-bold">Your Wallet</h2>
+                <h2 className="text-2xl font-bold"> Wallet</h2>
                 <p className="text-muted-foreground">
                   {address
                     ? `${address.slice(0, 6)}...${address.slice(-4)}`
@@ -387,7 +387,7 @@ export default function WalletView() {
             <div className="flex items-center space-x-4">
               <Brain className="h-8 w-8 text-secondary" />
               <div>
-                <h2 className="text-2xl font-bold">AI Agent Wallet</h2>
+                <h2 className="text-2xl font-bold"> Agent Wallet</h2>
                 <p className="text-muted-foreground">
                   {user?.agentWallet
                     ? `${user.agentWallet.slice(
