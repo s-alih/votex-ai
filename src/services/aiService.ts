@@ -6,11 +6,27 @@ import { Vote } from "../models/vote";
 import { db } from "../config/firebase";
 import { DAO } from "../models/dao";
 import { Proposal } from "../models/proposal";
+import { ethers } from "ethers";
 
 export async function fetchAgents(daoId: string): Promise<AIAgent[]> {
   const snapshot = await agentsRef.where("daoId", "==", daoId).get();
   return snapshot.docs.map((doc) => doc.data() as AIAgent);
 }
+
+const provider = new ethers.JsonRpcProvider(process.env.SONIC_RPC_URL);
+
+// Add contract ABI and address
+const GOVERNANCE_ABI = [
+  "function delegateVote(address _delegate) external",
+  "function revokeDelegation() external",
+  "function voteDelegation(address) public view returns (address)",
+  "function aiAgentUser(address) public view returns (address)",
+  "event ProposalCreated(uint256 id, string title, string description, address proposer)",
+  "event VoteCast(uint256 proposalId, address voter, bool vote, uint256 weight)",
+  "event ProposalExecuted(uint256 id, bool passed)",
+  "event VoteDelegated(address indexed voter, address indexed delegate)",
+  "event DelegationRevoked(address indexed voter)",
+];
 
 export async function callAIForVoting(
   proposal: Proposal,
@@ -68,6 +84,33 @@ export async function callAIForVoting(
     // Store vote in Firestore
     await db.collection("votes").doc(vote.id).set(vote);
 
+    // schedule the vote just beofore proposal.deadline
+    const proposalDeadline = new Date(proposal.deadline);
+    const now = new Date();
+    const timeUntilVote = proposalDeadline.getTime() - now.getTime();
+    setTimeout(async () => {
+      vote.isVoted = true;
+      await db
+        .collection("votes")
+        .doc(vote.id)
+        .update({
+          ...vote,
+          timestamp: Date.now(),
+        });
+
+      // in we need call the smart contract to cast the vote
+      const contract = new ethers.Contract(
+        agent.dao.governanceContractAddress,
+        GOVERNANCE_ABI,
+        provider
+      );
+
+      // cast the vote
+      const tx = await contract.castVote(proposal.id, vote.voteType, {
+        gasLimit: 1000000,
+      });
+      await tx.wait();
+    }, timeUntilVote);
     // Store vote in ChromaDB for future reference
     await chromaService.storeUserVote(agent.userId, vote);
 

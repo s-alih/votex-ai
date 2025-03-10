@@ -28,11 +28,11 @@ app.listen(PORT, async () => {
   try {
     // // Initialize event listeners
     await initializeProposalCreatedListeners();
-    // console.log("🎧 DAO event listeners initialized");
+    console.log("🎧 DAO event listeners initialized");
 
-    // // Start historical data collection
-    // const historicalDataService = new HistoricalDataService();
-    // await historicalDataService.startDataCollection();
+    // Start historical data collection
+    const historicalDataService = new HistoricalDataService();
+    await historicalDataService.startDataCollection();
     console.log("📊 Historical data collection service started");
   } catch (error) {
     console.error("❌ Failed to initialize services:", error);

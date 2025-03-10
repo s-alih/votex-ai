@@ -113,19 +113,19 @@ async function pollForEvents(contract: ethers.Contract, dao: any) {
       }
     }
 
-    // // Process VoteCast events
-    // for (const event of voteEvents) {
-    //   const args = (event as ethers.EventLog).args;
-    //   if (!args) continue;
+    // Process VoteCast events
+    for (const event of voteEvents) {
+      const args = (event as ethers.EventLog).args;
+      if (!args) continue;
 
-    //   const [proposalId, voter, vote, weight] = args;
+      const [proposalId, voter, vote, weight] = args;
 
-    //   const proposal = await getProposal(proposalId);
-    //   if (proposal) {
-    //     proposal.votesFor += weight;
-    //     await updateProposal(proposal);
-    //   }
-    // }
+      const proposal = await getProposal(proposalId);
+      if (proposal) {
+        proposal.votesFor += weight;
+        await updateProposal(proposal);
+      }
+    }
 
     // Update the last processed block
     lastProcessedBlocks[dao.governanceContractAddress] = currentBlock;
@@ -164,6 +164,35 @@ export async function initializeVoteCastListeners() {
     });
   } catch (error) {
     console.error("❌ Error initializing vote cast listeners:", error);
+    throw error;
+  }
+}
+
+// need to add a listener for the ProposalExecuted event and update the proposal with the result
+
+export async function initializeProposalExecutedListeners() {
+  try {
+    // Fetch all DAOs
+    const daos = await getAllDAOs();
+    console.log(`📡 Setting up listeners for ${daos.length} DAOs...`);
+
+    // Set up listeners for each DAO
+    daos.forEach((dao) => {
+      const contract = new ethers.Contract(
+        dao.governanceContractAddress,
+        GOVERNANCE_ABI,
+        provider
+      );
+
+      contract.on("ProposalExecuted", async (proposalId, passed) => {
+        // update the proposal with the result
+        const proposal = await getProposal(proposalId);
+        proposal.executed = true;
+        await updateProposal(proposal);
+      });
+    });
+  } catch (error) {
+    console.error("❌ Error initializing proposal executed listeners:", error);
     throw error;
   }
 }
