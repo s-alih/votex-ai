@@ -13,22 +13,27 @@ dotenv.config();
 
 const app = express();
 
+// Single CORS configuration
 app.use(
   cors({
-    origin: "*", // Allows all origins
+    origin: "*",
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
-    exposedHeaders: ["Access-Control-Allow-Origin"],
     credentials: false,
   })
 );
 
+app.use(express.json());
+
+// Keep the debug middleware
 app.use((req, res, next) => {
-  res.header("Access-Control-Allow-Origin", "*");
+  const originalSend = res.send;
+  res.send = function (...args) {
+    console.log("Response Headers:", res.getHeaders());
+    return originalSend.apply(res, args);
+  };
   next();
 });
-
-app.use(express.json());
 
 app.use("/api/users", userRoutes);
 app.use("/api/votes", voteRoutes);
