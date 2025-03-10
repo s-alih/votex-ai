@@ -13,17 +13,11 @@ dotenv.config();
 
 const app = express();
 
-const allowedOrigins = [
-  "https://votex-ai.vercel.app",
-  // Add other allowed origins here
-];
-
 app.use(
   cors({
-    origin: process.env.NODE_ENV === "production" ? allowedOrigins : "*",
+    origin: "*",
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
-    credentials: true,
   })
 );
 
