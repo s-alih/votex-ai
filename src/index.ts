@@ -15,11 +15,18 @@ const app = express();
 
 app.use(
   cors({
-    origin: "*",
+    origin: "*", // Allows all origins
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
+    exposedHeaders: ["Access-Control-Allow-Origin"],
+    credentials: false,
   })
 );
+
+app.use((req, res, next) => {
+  res.header("Access-Control-Allow-Origin", "*");
+  next();
+});
 
 app.use(express.json());
 
