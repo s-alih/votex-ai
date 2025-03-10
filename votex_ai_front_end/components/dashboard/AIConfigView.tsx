@@ -30,16 +30,8 @@ import {
   ThumbsDown,
   ChevronRight,
 } from "lucide-react";
-import {
-  useAccount,
-  useWriteContract,
-  useSimulateContract,
-  useWatchContractEvent,
-} from "wagmi";
-import {
-  type SimulateContractParameters,
-  type SimulateContractReturnType,
-} from "wagmi/actions";
+import { useAccount, useWriteContract } from "wagmi";
+
 import { parseAbi } from "viem";
 import { toast } from "sonner";
 

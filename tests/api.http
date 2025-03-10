@@ -17,7 +17,8 @@ Content-Type: application/json
 
 
 ###
-GET http://localhost:3001/api/daos/all
+GET https://api.dotfeeds.com/api/daos/all
+
 
 
 ###
